@@ -2,10 +2,10 @@
 
 (asdf:defsystem #:svg
   :serial t
-  :description "Describe svg here"
-  :author "Your Name <your.name@example.com>"
-  :license "Specify license here"
-  :depends-on (#:cl-ppcre)
+  :description "A very simple SVG generator."
+  :author "Jeremiah LaRocco <jeremiah_larocco@fastmail.com"
+  :license "ISC"
+  :depends-on (#:3d-vectors)
   :components ((:file "package")
                (:file "svg")))
 
