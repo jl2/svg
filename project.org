@@ -1,0 +1,72 @@
+* svg
+
+** About
+
+   This is a small package for generating simple SVG files.
+
+** Example
+
+*** Red and Blue Star
+#+begin_src lisp :results file graphics :file "/tmp/org-test-star.svg"
+  (ql:quickload '(:svg :3d-vectors :alexandria))
+
+  (use-package :3d-vectors)
+  (use-package :alexandria)
+  (with-output-to-file (outf "/tmp/org-test-star.svg" :if-exists :supersede)
+    (svg:with-svg (outf 800 800 :default-stroke-width 0.01)
+      (svg:star outf (vec2 0 0) 5 1.0 0.4 :angle-offset (/ pi -2)
+                :stroke-color "red" :fill-color "blue")))
+#+end_src
+
+*** Circles on a Rectangle
+#+begin_src lisp :results file graphics :file "/tmp/org-testsvg.svg"
+  (ql:quickload '(:svg :3d-vectors :alexandria))
+
+  (use-package :3d-vectors)
+  (use-package :alexandria)
+  (with-output-to-file (outf "/tmp/org-test-shapes.svg" :if-exists :supersede)
+    (svg:with-svg (outf 400 400 :default-stroke-width 0.01)
+      (svg:rectangle outf (vec2 -1.0 -0.75) (vec2 2.0 1.5) :fill-color "magenta")
+      (svg:circle outf (vec2 -0.5 0) 0.5 :fill-color "red")
+      (svg:circle outf (vec2 0.5 0) 0.5 :fill-color (vec4 0 0 1 1) :stroke-width 0.08)
+      (svg:circle outf (vec2 0 0) 0.5 :stroke-color "green" :fill-color (vec4 0 1 0 0.5))
+      (svg:regular-polygon outf (vec2 0 0) 3 0.5 :stroke-color "red" :fill-color "blue")))
+      #+end_src
+
+*** Rotating Stars
+#+begin_src lisp :results file graphics :file "/tmp/org-testsvg3.svg"
+  (with-output-to-file (outf "/tmp/org-rotated-hexagons.svg" :if-exists :supersede)
+    (svg:with-svg (outf 400 400 :default-stroke-width 0.001)
+      (dotimes (i 220)
+        (svg:regular-polygon outf (vec2 0 0) 6 (- 1.0 (/ i 220))
+                             :angle-offset (* i (/ pi 80))
+                             :stroke-color "black"
+                             :fill-color (vec4 (random 1.0) (+ 0.5 (random 0.5)) (random 1.0) 0.5)))))
+#+end_src
+
+*** Serving via Hunchentoot Web Server
+#+begin_src lisp
+  (hunchentoot:start (make-instance 'hunchentoot:easy-acceptor :port 4242))
+  (hunchentoot:define-easy-handler (gensvg :uri "/") ()
+     (setf (hunchentoot:content-type*) "image/svg+xml")
+     (with-output-to-string (outf)
+    (svg:with-svg (outf 1200 1200 :default-stroke-width 0.0015)
+      (let ((count (+ 180 (random 180)))
+            (center (vec2 0 0))
+            (sides (+ 3 (random 7)))
+            (spins (1+ (random 5.0)))
+            (offset (random (/ pi 2)))
+            (step (1+ (random 5))))
+      (loop :for i :below count :by step :do
+        (svg:regular-polygon
+         outf center sides (- 1.0 (/ i count))
+         :angle-offset (+ offset (* i (/ pi (/ count spins))))
+         :stroke-color (vec4 0 0.8 0 1)
+         :fill-color (vec4 (random 1.0) (+ 0.2 (random 0.5)) (random 1.0) 0.25)))))))
+#+end_src
+
+** License
+ISC
+
+Copyright (c) 2021 Jeremiah LaRocco <jeremiah_larocco@fastmail.com>
+

@@ -2,56 +2,62 @@
 
 (in-package #:svg)
 
+(defparameter *default-stroke-width* 1.0)
+(defparameter *default-stroke-color* (vec4 0 0 0 1.0))
+(defparameter *default-fill-color* (vec4 0 0 0 1.0))
+
 (defun color (stream color)
+  "Write an SVG color to stream."
   (declare (type (or string vec4) color))
   (etypecase color
     (vec4
-     (format stream "rgba(~d,~d,~d,~d)"
+     (format stream "rgba(~d,~d,~d,~f)"
           (truncate (* 255 (vx color)))
           (truncate (* 255 (vy color)))
           (truncate (* 255 (vz color)))
-          (truncate (* 255 (vw color)))))
+          (vw color)))
     (string
-     (format stream "~s" color))))
+     (format stream "~a" color))))
 
 (defun rectangle (stream pt size
                   &key
                     (rounded nil)
-                    (stroke-width 1.0)
-                    (stroke-color (vec4 0 0 0 1.0))
-                    (fill-color (vec4 0 0 0 1.0)))
-  ;; TODO: Don't copy/paste this...
-  (cond (rounded
-         (format stream 
-                 "<rect x=\"~f\" y=\"~f\" width=\"~f\" height=\"~f\" rx=\"~f\" ry=\"~f\" stroke=~s stroke-width=\"~f\" fill=~s/>~%"
-                 (vx pt) (vy pt)
-                 (vx size) (vy size)
-                 (vx rounded) (vy rounded)
-                 (color nil stroke-color)
-                 stroke-width
-                 (color nil fill-color)))
-        (t
-         (format stream 
-                 "<rect x=\"~f\" y=\"~f\" width=\"~f\" height=\"~f\" stroke=~s stroke-width=\"~f\" fill=~s/>~%"
-                 (vx pt) (vy pt)
-                 (vx size) (vy size)
-                 (color nil stroke-color)
-                 stroke-width
-                 (color nil fill-color)))))
+                    (stroke-width *default-stroke-width*)
+                    (stroke-color *default-stroke-color*)
+                    (fill-color *default-fill-color*))
+  "Write an SVG rectangle to stream."
+  (format stream
+          "<rect x=\"~f\" y=\"~f\" width=\"~f\" height=\"~f\" ~a stroke=~s stroke-width=\"~f\" fill=~s/>~%"
+          (vx pt) (vy pt)
+          (vx size) (vy size)
+          (if rounded
+              (format nil "rx=\"~f\" ry=\"~f\"" (vx rounded) (vy rounded))
+              "")
+          (color nil stroke-color)
+          stroke-width
+          (color nil fill-color)))
 
 (defun ellipse (stream pt size
                 &key
-                  (stroke-width 1.0)
-                  (stroke-color (vec4 0 0 0 1.0))
-                  (fill-color (vec4 0 0 0 1.0)))
-  )
+                  (stroke-width *default-stroke-width*)
+                  (stroke-color *default-stroke-color*)
+                  (fill-color *default-fill-color*))
+  "Write an SVG ellipse to stream."
+  (format stream
+          "<ellipse cx=\"~f\" cy=\"~f\" rx=\"~f\" ry=\"~f\" stroke=~s stroke-width=\"~f\" fill=~s/>~%"
+          (vx pt) (vy pt)
+          (vx size) (vy size)
+          (color nil stroke-color)
+          stroke-width
+          (color nil fill-color)))
 
 (defun circle (stream center radius
                &key
-                 (stroke-width 1.0)
-                 (stroke-color (vec4 0 0 0 1.0))
-                 (fill-color (vec4 0 0 0 1.0)))
-  (format stream 
+                 (stroke-width *default-stroke-width*)
+                 (stroke-color *default-stroke-color*)
+                 (fill-color *default-fill-color*))
+  "Write an SVG circle to stream."
+  (format stream
           "<circle cx=\"~f\" cy=\"~f\" r=\"~f\" stroke=~s stroke-width=\"~f\" fill=~s/>~%"
           (vx center) (vy center)
           radius
@@ -61,90 +67,148 @@
 
 (defun polyline (stream points
                  &key
-                   (stroke-width 1.0)
-                   (stroke-color (vec4 0 0 0 1.0)))
-  )
+                   (stroke-width *default-stroke-width*)
+                   (stroke-color *default-stroke-color*))
+  "Write an SVG polyline to stream."
+  (format stream
+          "<polyline points=\"")
+  (loop
+    :for pt :in points :do
+      (format stream "~f ~f "
+              (vx pt) (vy pt)))
+  (format stream "\" stroke=~s stroke-width=\"~f\"/>"
+          (color nil stroke-color)
+          stroke-width))
 
 (defun line (stream pt1 pt2
              &key
-               (stroke-width 1.0)
-               (stroke-color (vec4 0 0 0 1.0)))
-  )
+               (stroke-width *default-stroke-width*)
+               (stroke-color *default-stroke-color*))
+  "Write an SVG line to stream."
+  (format stream
+          "<line x1=\"~f\" y1=\"~f\" x2=\"~f\" y2=\"~f\" stroke=~s stroke-width=\"~f\"/>"
+          (vx pt1) (vy pt1)
+          (vx pt2) (vy pt2)
+          (color nil stroke-color)
+          stroke-width))
 
 (defun polygon (stream points
                 &key
-                  (stroke-width 1.0)
-                  (stroke-color (vec4 0 0 0 1.0))
-                  (fill-color (vec4 0 0 0 1.0)))
-  )
+                  (stroke-width *default-stroke-width*)
+                  (stroke-color *default-stroke-color*)
+                  (fill-color *default-fill-color*))
+  "Write an SVG polygon to stream."
+  (format stream
+          "<polygon points=\"")
+  (loop
+    :for pt :in points :do
+      (format stream "~f ~f "
+              (vx pt) (vy pt)))
+  (format stream "\" stroke=~s stroke-width=\"~f\" fill=~s/>"
+          (color nil stroke-color)
+          stroke-width
+          (color nil fill-color)))
+
+(defun regular-polygon (stream center side-count radius
+                        &key
+                          (angle-offset 0.0)
+                          (stroke-width *default-stroke-width*)
+                          (stroke-color *default-stroke-color*)
+                          (fill-color *default-fill-color*))
+  "Write an SVG polygon to stream."
+  (format stream
+          "<polygon points=\"")
+  (let ((angle-increment (/ (* 2 pi) side-count)))
+    (loop
+      :for side :below side-count
+      :for theta = (+ angle-offset (* side angle-increment))
+      :do
+         (format stream "~f ~f "
+                 (+ (vx center) (* radius (cos theta)))
+                 (+ (vy center) (* radius (sin theta))))))
+  (format stream "\" stroke=~s stroke-width=\"~f\" fill=~s/>"
+          (color nil stroke-color)
+          stroke-width
+          (color nil fill-color)))
+
+(defun star (stream center point-count outter-radius inner-radius
+                        &key
+                          (angle-offset 0.0)
+                          (stroke-width *default-stroke-width*)
+                          (stroke-color *default-stroke-color*)
+                          (fill-color *default-fill-color*))
+  "Write an SVG polygon star to stream."
+  (format stream
+          "<polygon points=\"")
+  (let ((angle-increment (/ (* 2 pi) point-count))
+        (half-angle-increment (/ pi point-count)))
+    (loop
+      :for point :below point-count
+      :for theta = (+ angle-offset (* point angle-increment))
+      :for theta-two = (+ angle-offset half-angle-increment
+                          (* point angle-increment))
+      :do
+         (format stream "~f ~f "
+                 (+ (vx center) (* outter-radius (cos theta)))
+                 (+ (vy center) (* outter-radius (sin theta))))
+         (format stream "~f ~f "
+                 (+ (vx center) (* inner-radius (cos theta-two)))
+                 (+ (vy center) (* inner-radius (sin theta-two))))))
+  (format stream "\" stroke=~s stroke-width=\"~f\" fill=~s/>"
+          (color nil stroke-color)
+          stroke-width
+          (color nil fill-color)))
+
+(defun view-box (stream view-min view-width)
+  "Write an SVG polygon to stream."
+  (cond ((and (and view-min view-width) (or view-min view-width))
+         (format stream "viewBox=\"~f ~f ~f ~f\""
+                 (vx view-min)
+                 (vy view-min)
+                 (vx view-width)
+                 (vy view-width)))
+        ((and (null view-min) (null view-width))
+         "")
+        (t
+         (error "view-min and view-max must both be specified or both nil"))))
 
 (defun begin-svg (stream width height
                   &key
                     (view-min (vec2 -1.0 -1.0))
                     (view-width (vec2 2.0 2.0)))
+  "Write the beginning of an SVG file to stream."
   (format stream "~
 <?xml version=\"1.0\" standalone=\"no\"?>~%<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">~%
-<svg width=\"~d\" height=\"~d\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"~a ~a ~a ~a\">~%"
+<svg width=\"~d\" height=\"~d\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" ~a>~%"
           width
           height
-          (vx view-min)
-          (vy view-min)
-          (vx view-width)
-          (vy view-width)))
+          (view-box nil view-min view-width)))
 
 (defun end-svg (stream)
+  "Write the end of an SVG file to stream."
   (format stream "</svg>~%"))
 
-(defmacro with-svg-output ((stream width height
+(defmacro with-svg ((stream width height
                             &key
-                              (view-min (vec2 -0.0 -0.0))
-                              (view-width (vec2 2.0 2.0)))
-                           &body body)
+                              (view-min (vec2 -1.0 -1.0))
+                              (view-width (vec2 2.0 2.0))
+                              (default-stroke-color nil)
+                              (default-stroke-width nil)
+                              (default-fill-color nil))
+                    &body body)
   `(unwind-protect
         (progn
-		  (begin-svg ,stream ,width ,height
-                     :view-min ,view-min
-                     :view-width ,view-width)
-		  ,@body)
-     (end-svg ,stream)))
-  
-;; (defun to-file (img &key (stream t) (scale 1.0) (width 800) (height 600))
-;;   (format stream "<?xml version=\"1.0\" standalone=\"no\"?> <!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\"> <svg width=\"~d\" height=\"~d\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\">" width height)
-;;   (dolist (poly (svg-polys img))
-;;     (let ((fill-color (polygon-fill-color poly))
-;;           (stroke-color (polygon-stroke-color poly)))
-;;       (format stream "<polygon points=\"")
-;;       (dolist (pt (polygon-points poly))
-;;         (format stream "~f,~f " (* scale (point-x pt)) (* scale (point-y pt)) ))
-;;       (if fill-color
-;;           (format stream "\" style=\"fill:~a; stroke:~a;stroke-width:1\"/>" (to-svgstring fill-color) (to-svgstring stroke-color))
-;;         (format stream "\" style=\"fill:#cccccc; stroke:#000000;stroke-width:1\"/>"))))
-
-;;   (dolist (line (svg-lines img))
-;; 	(let* ((p1 (line-pt1 line))
-;;                (p2 (line-pt2 line))
-;;                (color (line-color line))
-;;                (cstring (if color
-;;                             (to-svgstring color)
-;;                           "rgb(0,0,0)")))
-               
-;; 	  (format stream "<line x1=\"~f\" y1=\"~f\" x2=\"~f\" y2=\"~f\" style=\"stroke:~a;stroke-width:2\"/>"
-;; 			  (* scale (point-x p1))
-;; 			  (* scale (point-y p1))
-;; 			  (* scale (point-x p2))
-;; 			  (* scale (point-y p2))
-;;                           cstring)))
-  
-;;   (dolist (pt (svg-points img))
-;;     (let* ((color (point-color pt))
-;;            (cstring (if color
-;;                         (to-svgstring color)
-;;                       "green")))
-;;       (format stream "<circle cx=\"~f\" cy=\"~f\" r=\"3\" stroke=\"~a\" stroke-width=\"2\" fill=\"~a\"/>" (* scale (point-x pt)) (* (point-y pt)) cstring cstring)))
-
-;;   (format stream "</svg>"))
-
-;; (defun to-file-name (img fname &key (scale 1.0) (width 800) (height 600))
-;;   (with-open-file (stream fname :direction :output :if-exists :supersede :if-does-not-exist :create)
-;; 				  (to-file img :stream stream :scale scale
-;;                                            :width width :height height)))
+          (let ((*default-stroke-width* (if ,default-stroke-width
+                                            ,default-stroke-width
+                                            *default-stroke-width*))
+                (*default-stroke-color* (if ,default-stroke-color
+                                            ,default-stroke-color
+                                            *default-stroke-color*))
+                (*default-fill-color* (if ,default-fill-color
+                                          ,default-fill-color
+                                          *default-fill-color*)))
+            (begin-svg ,stream ,width ,height
+                       :view-min ,view-min
+                       :view-width ,view-width)
+            ,@body)
+          (end-svg ,stream))))
