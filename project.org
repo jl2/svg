@@ -14,9 +14,12 @@
   (use-package :alexandria)
   (with-output-to-file (outf "/tmp/org-test-star.svg" :if-exists :supersede)
     (svg:with-svg (outf 800 800 :default-stroke-width 0.01)
-      (svg:star outf (vec2 0 0) 5 1.0 0.4 :angle-offset (/ pi -2)
+      (svg:star outf (vec2 0 0) 7 1.0 0.4 :angle-offset (/ pi -2)
                 :stroke-color "red" :fill-color "blue")))
 #+end_src
+
+#+RESULTS:
+[[file:/tmp/org-test-star.svg]]
 
 *** Circles on a Rectangle
 #+begin_src lisp :results file graphics :file "/tmp/org-testsvg.svg"
@@ -33,6 +36,9 @@
       (svg:regular-polygon outf (vec2 0 0) 3 0.5 :stroke-color "red" :fill-color "blue")))
       #+end_src
 
+      #+RESULTS:
+      [[file:/tmp/org-testsvg.svg]]
+
 *** Rotating Stars
 #+begin_src lisp :results file graphics :file "/tmp/org-testsvg3.svg"
   (with-output-to-file (outf "/tmp/org-rotated-hexagons.svg" :if-exists :supersede)
@@ -46,6 +52,8 @@
 
 *** Serving via Hunchentoot Web Server
 #+begin_src lisp
+  (ql:quickload '(:hunchentoot :svg :3d-vectors))
+  (use-package :3d-vectors)
   (hunchentoot:start (make-instance 'hunchentoot:easy-acceptor :port 4242))
   (hunchentoot:define-easy-handler (gensvg :uri "/") ()
      (setf (hunchentoot:content-type*) "image/svg+xml")
@@ -64,6 +72,9 @@
          :stroke-color (vec4 0 0.8 0 1)
          :fill-color (vec4 (random 1.0) (+ 0.2 (random 0.5)) (random 1.0) 0.25)))))))
 #+end_src
+
+#+RESULTS:
+: GENSVG
 
 ** License
 ISC
