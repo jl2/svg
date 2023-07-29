@@ -17,4 +17,7 @@
    #:begin-svg
    #:end-svg
    #:with-svg
+   #:text
+   #:default-style
+   #:style
    ))

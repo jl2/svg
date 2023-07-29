@@ -5,17 +5,23 @@
 (defparameter *default-stroke-width* 1.0)
 (defparameter *default-stroke-color* (vec4 0 0 0 1.0))
 (defparameter *default-fill-color* (vec4 0 0 0 1.0))
+(defvar *default-text-name* "default-style")
+(defvar *default-style-text* (format nil ".~a {
+ font: 12pt sans-serif;
+ fill: #dd1111;
+ }" *default-text-name*))
+
 
 (defun color (stream color)
   "Write an SVG color to stream."
   (declare (type (or string vec4) color))
   (etypecase color
     (vec4
-     (format stream "rgba(~d,~d,~d,~f)"
-          (truncate (* 255 (vx color)))
-          (truncate (* 255 (vy color)))
-          (truncate (* 255 (vz color)))
-          (vw color)))
+     (format stream "rgba(~d,~d,~d,~d)"
+             (truncate (* 255 (vx color)))
+             (truncate (* 255 (vy color)))
+             (truncate (* 255 (vz color)))
+             (truncate (* 255 (vw color)))))
     (string
      (format stream "~a" color))))
 
@@ -64,6 +70,20 @@
           (color nil stroke-color)
           stroke-width
           (color nil fill-color)))
+
+(defun default-style (stream)
+  (format stream "<style>~a</style>~%" *default-style-text*))
+
+(defun style (stream style-text)
+  (format stream "<style>~a</style>~%" style-text))
+
+(defun text (stream position text &key (text-style *default-text-name*))
+  (format stream
+          "<text x=\"~a\" y=\"~a\" class=\"~a\">~a</text>~%"
+          (vx position)
+          (vy position)
+          text-style
+          text))
 
 (defun polyline (stream points
                  &key
@@ -175,14 +195,16 @@
 (defun begin-svg (stream width height
                   &key
                     (view-min (vec2 -1.0 -1.0))
-                    (view-width (vec2 2.0 2.0)))
+                    (view-width (vec2 2.0 2.0))
+                    (fill (vec4 1 1 1 1)))
   "Write the beginning of an SVG file to stream."
   (format stream "~
 <?xml version=\"1.0\" standalone=\"no\"?>~%<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">~%
-<svg width=\"~d\" height=\"~d\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" ~a>~%"
+<svg width=\"~d\" height=\"~d\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" ~a fill=~s >~%"
           width
           height
-          (view-box nil view-min view-width)))
+          (view-box nil view-min view-width)
+          (color nil fill)))
 
 (defun end-svg (stream)
   "Write the end of an SVG file to stream."
