@@ -2,6 +2,15 @@
 
 (in-package #:svg)
 
+(defclass svg-context ()
+  ((stream :initform nil)
+   (default-stroke-width :initform 1.0)
+   (default-stroke-color :initform (vec4 0 0 0 1.0))
+   (default-fill-color :initform (vec4 0 0 0 1.0))
+   (view-min :initform (vec2 -1.0 -1.0))
+   (view-width :initform (vec2 2.0 2.0))
+   (background-color :initform (vec4 1 1 1 1))))
+
 (defparameter *default-stroke-width* 1.0)
 (defparameter *default-stroke-color* (vec4 0 0 0 1.0))
 (defparameter *default-fill-color* (vec4 0 0 0 1.0))
