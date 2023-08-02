@@ -2,7 +2,11 @@
 
 ** About
 
-   This is a small package for generating simple SVG files.
+   This is a small package for generating simple SVG
+
+** context-refactor branch
+This branch is to explore storing all state in an svg-context object and
+removing the *default** special variables.
 
 ** Example
 
