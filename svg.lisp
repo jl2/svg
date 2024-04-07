@@ -26,11 +26,11 @@
   (declare (type (or string vec4) color))
   (etypecase color
     (vec4
-     (format stream "rgba(~d,~d,~d,~d)"
+     (format stream "rgba(~d,~d,~d,~f)"
              (truncate (* 255 (vx color)))
              (truncate (* 255 (vy color)))
              (truncate (* 255 (vz color)))
-             (truncate (* 255 (vw color)))))
+             (vw color)))
     (string
      (format stream "~a" color))))
 
