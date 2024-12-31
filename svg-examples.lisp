@@ -52,7 +52,7 @@
                    :view-min (vec2 -2.5 -2.5)
                    :view-width (vec2 5.0 5.0))
       (let ((c (random-complex 3.8 3.80))
-            (exp (+ 0.5  (random pi))))
+            (exp (+ 1.0  (random pi))))
         (loop
           :with xmin = -1.25
           :with xmax = 1.25
