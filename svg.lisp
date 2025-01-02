@@ -14,7 +14,9 @@
 (defparameter *default-stroke-width* 1.0)
 (defparameter *default-stroke-color* (vec4 0 0 0 1.0))
 (defparameter *default-fill-color* (vec4 0 0 0 1.0))
+
 (defvar *default-text-name* "default-style")
+
 (defvar *default-style-text* (format nil ".~a {
  font: 12pt sans-serif;
  fill: #dd1111;
@@ -205,7 +207,8 @@
                   &key
                     (view-min (vec2 -1.0 -1.0))
                     (view-width (vec2 2.0 2.0))
-                    (fill (vec4 1 1 1 1)))
+                    (fill (vec4 1 1 1 1))
+                    (title nil))
   "Write the beginning of an SVG file to stream."
   (format stream "~
 <?xml version=\"1.0\" standalone=\"no\"?>~%<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">~%
@@ -213,7 +216,9 @@
           width
           height
           (view-box nil view-min view-width)
-          (color nil fill)))
+          (color nil fill))
+  (when title
+    (format stream "<title>~a</title>~%" title)))
 
 (defun end-svg (stream)
   "Write the end of an SVG file to stream."
@@ -225,7 +230,8 @@
                               (view-width (vec2 2.0 2.0))
                               (default-stroke-color nil)
                               (default-stroke-width nil)
-                              (default-fill-color nil))
+                              (default-fill-color nil)
+                              (title nil))
                     &body body)
   `(unwind-protect
         (progn
@@ -240,6 +246,7 @@
                                           *default-fill-color*)))
             (begin-svg ,stream ,width ,height
                        :view-min ,view-min
-                       :view-width ,view-width)
+                       :view-width ,view-width
+                       :title ,title)
             ,@body)
           (end-svg ,stream))))

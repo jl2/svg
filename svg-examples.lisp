@@ -46,13 +46,14 @@
 (hunchentoot:define-easy-handler (mandelsvg :uri "/mandel") ()
   (setf (hunchentoot:content-type*) "image/svg+xml")
   (with-output-to-string (outf)
-    (svg:with-svg (outf
-                   2048 2048
-                   :default-stroke-width 0.000015
-                   :view-min (vec2 -2.5 -2.5)
-                   :view-width (vec2 5.0 5.0))
-      (let ((c (random-complex 3.8 3.80))
-            (exp (+ 1.0  (random pi))))
+    (let ((c (random-complex 3.8 3.80))
+          (exp (+ 1.0  (random pi))))
+      (svg:with-svg (outf
+                     2048 2048
+                     :default-stroke-width 0.000015
+                     :view-min (vec2 -2.5 -2.5)
+                     :view-width (vec2 5.0 5.0)
+                     :title (format nil "C: ~a exp: ~a" c exp))
         (loop
           :with xmin = -1.25
           :with xmax = 1.25
@@ -71,7 +72,7 @@
                :for j :below ycount
                :for cury = (+ ymin (* dy j))
                :for pt = (complex curx cury)
- 
+               
                :do
                   (loop
                     :with alpha = 0.2
@@ -96,29 +97,25 @@
                                  (complex-to-vector goes-to)
                                  :stroke-width 0.002
                                  :stroke-color color)
-                       ;; (svg:line outf
-                       ;;           (complex-to-vector pt)
-                       ;;           (complex-to-vector goes-to)
-                       ;;           :stroke-width 0.002
-                       ;;           :stroke-color color)
+
                     )
                ))
-        (svg:circle outf (complex-to-vector c) (/ 2.5 120) :fill-color (vec4 1.0 0.0 0.0 0.5)))
-      ;; (let* ((count 3600))
-      ;;   (loop
-      ;;     :for pts = (sort (loop :for pt = (+ (random-complex)) :then (+ (mandel-iterate pt))
-      ;;                            :for j :below 3
-      ;;                            :collecting pt)
-      ;;                      #'<
-      ;;                      :key #'abs)
-      ;;     :for i :below count :by 1
-      ;;     :do
-      ;;        (svg:polygon outf (mapcar #'complex-to-vector pts)
-      ;;                     :stroke-color (vec4 (random 0.2) (random 0.2) (random 0.2) 0.8)
-      ;;                     :stroke-width 0.0014
-      ;;                     :fill-color (vec4 (random 0.5) (+ 0.2 (random 0.125)) (random 0.5) 0.000125)
-      ;;                     )))
-      )))
+        (svg:circle outf (complex-to-vector c) (/ 2.5 120) :fill-color (vec4 1.0 0.0 0.0 0.5))
+        ;; (let* ((count 3600))
+        ;;   (loop
+        ;;     :for pts = (sort (loop :for pt = (+ (random-complex)) :then (+ (mandel-iterate pt))
+        ;;                            :for j :below 3
+        ;;                            :collecting pt)
+        ;;                      #'<
+        ;;                      :key #'abs)
+        ;;     :for i :below count :by 1
+        ;;     :do
+        ;;        (svg:polygon outf (mapcar #'complex-to-vector pts)
+        ;;                     :stroke-color (vec4 (random 0.2) (random 0.2) (random 0.2) 0.8)
+        ;;                     :stroke-width 0.0014
+        ;;                     :fill-color (vec4 (random 0.5) (+ 0.2 (random 0.125)) (random 0.5) 0.000125)
+        ;;                     )))
+        ))))
 
 (hunchentoot:define-easy-handler (testsvg :uri "/test") ()
   (setf (hunchentoot:content-type*) "image/svg+xml")
