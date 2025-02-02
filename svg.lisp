@@ -14,14 +14,20 @@
 (defparameter *default-stroke-width* 1.0)
 (defparameter *default-stroke-color* (vec4 0 0 0 1.0))
 (defparameter *default-fill-color* (vec4 0 0 0 1.0))
+(defvar *default-text-style* "default")
 
-(defvar *default-text-name* "default-style")
-
-(defvar *default-style-text* (format nil ".~a {
- font: 12pt sans-serif;
- fill: #dd1111;
- }" *default-text-name*))
-
+(defun make-style (stream &key
+                            (style-name "default")
+                            (font-size 12)
+                            (font-unit "pt")
+                            (font-face "sans-serif")
+                            (fill *default-fill-color*)
+                            (stroke *default-stroke-color*))
+  (format stream ".~a {
+  font: ~a~a ~a;
+  fill: ~a;
+  stroke: ~a;
+}" style-name font-size font-unit font-face (color nil fill) (color nil stroke)))
 
 (defun color (stream color)
   "Write an SVG color to stream."
@@ -88,13 +94,20 @@
 (defun style (stream style-text)
   (format stream "<style>~a</style>~%" style-text))
 
-(defun text (stream position text &key (text-style *default-text-name*))
+(defun text (stream position text &key
+                                    (text-style *default-text-style*)
+                                    (flip-y t)
+                                    (view-width nil))
+  (when flip-y
+    (format stream "<g transform=\"matrix(1 0 0 -1 0 ~a)\">~%" (vy view-width)))
   (format stream
           "<text x=\"~a\" y=\"~a\" class=\"~a\">~a</text>~%"
           (vx position)
           (vy position)
           text-style
-          text))
+          text)
+  (when flip-y
+    (format stream "</g>~%")))
 
 (defun polyline (stream points
                  &key
@@ -208,7 +221,9 @@
                     (view-min (vec2 -1.0 -1.0))
                     (view-width (vec2 2.0 2.0))
                     (fill (vec4 1 1 1 1))
-                    (title nil))
+                    (title nil)
+                    (include-default-text-style t)
+                    (flip-y nil))
   "Write the beginning of an SVG file to stream."
   (format stream "~
 <?xml version=\"1.0\" standalone=\"no\"?>~%<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">~%
@@ -218,20 +233,30 @@
           (view-box nil view-min view-width)
           (color nil fill))
   (when title
-    (format stream "<title>~a</title>~%" title)))
+    (format stream "<title>~a</title>~%" title))
+  (when include-default-text-style
+    (style stream (make-style nil)))
+  (when flip-y
+    (format stream "<g transform=\"matrix(1 0 0 -1 0 ~a)\">~%" (vy view-width)))
+  (when flip-y))
 
-(defun end-svg (stream)
+(defun end-svg (stream flip-y)
   "Write the end of an SVG file to stream."
+  (when flip-y
+    (format stream "</g>"))
   (format stream "</svg>~%"))
 
 (defmacro with-svg ((stream width height
                             &key
                               (view-min (vec2 -1.0 -1.0))
                               (view-width (vec2 2.0 2.0))
+                              (default-text-style nil)
                               (default-stroke-color nil)
                               (default-stroke-width nil)
                               (default-fill-color nil)
-                              (title nil))
+                              (title nil)
+                              (flip-y nil))
+                    
                     &body body)
   `(unwind-protect
         (progn
@@ -243,10 +268,15 @@
                                             *default-stroke-color*))
                 (*default-fill-color* (if ,default-fill-color
                                           ,default-fill-color
-                                          *default-fill-color*)))
+                                          *default-fill-color*))
+                (*default-text-style* (if ,default-text-style
+                                          ,default-text-style
+                                          *default-text-style*)))
             (begin-svg ,stream ,width ,height
                        :view-min ,view-min
                        :view-width ,view-width
-                       :title ,title)
+                       :title ,title
+                       :flip-y ,flip-y
+                       :include-default-text-style t)
             ,@body)
-          (end-svg ,stream))))
+          (end-svg ,stream ,flip-y))))
