@@ -144,10 +144,16 @@
   "Write an SVG polygon to stream."
   (format stream
           "<polygon points=\"")
-  (loop
-    :for pt :in points :do
-      (format stream "~f ~f "
-              (vx pt) (vy pt)))
+  (etypecase points
+    (list (loop
+            :for pt :in points :do
+              (format stream "~f ~f "
+                      (vx pt) (vy pt))))
+    (t (loop
+         :for pt :across points :do
+           (format stream "~f ~f "
+                   (vx pt) (vy pt)))))
+  
   (format stream "\" stroke=~s stroke-width=\"~f\" fill=~s/>"
           (color nil stroke-color)
           stroke-width
