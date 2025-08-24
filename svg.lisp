@@ -89,13 +89,13 @@
           (color nil fill-color)))
 
 (defun default-style (stream)
-  (format stream "<style>~a</style>~%" *default-style-text*))
+  (format stream "<style>~a</style>~%" *default-text-style*))
 
 (defun style (stream style-text)
   (format stream "<style>~a</style>~%" style-text))
 
 (defun text (stream position text &key
-                                    (text-style *default-text-style*)
+                                    (style *default-text-style*)
                                     (flip-y t)
                                     (view-width nil))
   (when flip-y
@@ -104,7 +104,7 @@
           "<text x=\"~a\" y=\"~a\" class=\"~a\">~a</text>~%"
           (vx position)
           (vy position)
-          text-style
+          style
           text)
   (when flip-y
     (format stream "</g>~%")))
