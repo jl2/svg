@@ -19,5 +19,10 @@
    #:with-svg
    #:text
    #:default-style
+   #:*default-alpha*
+   #:*default-stroke-width*
+   #:*default-stroke-color*
+   #:*default-fill-color*
+   #:*default-text-style*
    #:style
    ))

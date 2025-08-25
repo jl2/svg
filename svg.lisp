@@ -14,6 +14,7 @@
 (defparameter *default-stroke-width* 1.0)
 (defparameter *default-stroke-color* (vec4 0 0 0 1.0))
 (defparameter *default-fill-color* (vec4 0 0 0 1.0))
+(defparameter *default-alpha* 0.5)
 (defvar *default-text-style* "default")
 
 (defun make-style (stream &key
@@ -31,7 +32,7 @@
 
 (defun color (stream color)
   "Write an SVG color to stream."
-  (declare (type (or string vec4) color))
+  (declare (type (or string list vec3 vec4) color))
   (etypecase color
     (vec4
      (format stream "rgba(~d,~d,~d,~f)"
@@ -39,6 +40,19 @@
              (truncate (* 255 (vy color)))
              (truncate (* 255 (vz color)))
              (vw color)))
+    (vec3
+     (format stream "rgba(~d,~d,~d,~f)"
+             (truncate (* 255 (vx color)))
+             (truncate (* 255 (vy color)))
+             (truncate (* 255 (vz color)))
+             *default-alpha*))
+    (list
+     (format stream "rgba(~{~a~^,~}, ~a)"
+             (mapcar (lambda (x) (* 255 x)) (subseq color 0 3))
+             (if (= (length color) 4)
+                 (fourth color)
+                 *default-alpha*))
+     )
     (string
      (format stream "~a" color))))
 
