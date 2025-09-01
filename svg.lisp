@@ -174,11 +174,14 @@
          :for pt :across points :do
            (format stream "~f ~f "
                    (vx pt) (vy pt)))))
-  
-  (format stream "\" stroke=~s stroke-width=\"~f\" fill=~s/>"
-          (color nil stroke-color)
-          stroke-width
-          (color nil fill-color)))
+
+  (if stroke-color
+      (format stream "\" stroke=~s stroke-width=\"~f\" fill=~s/>"
+              (color nil stroke-color)
+              stroke-width
+              (color nil fill-color))
+      (format stream "\" fill=~s/>"
+              (color nil fill-color))))
 
 (defun regular-polygon (stream center side-count radius
                         &key
@@ -197,10 +200,14 @@
          (format stream "~f ~f "
                  (+ (vx center) (* radius (cos theta)))
                  (+ (vy center) (* radius (sin theta))))))
-  (format stream "\" stroke=~s stroke-width=\"~f\" fill=~s/>"
-          (color nil stroke-color)
-          stroke-width
-          (color nil fill-color)))
+  (if stroke-color
+      (format stream "\" stroke=~s stroke-width=\"~f\" fill=~s/>"
+              (color nil stroke-color)
+              stroke-width
+              (color nil fill-color))
+      (format stream "\" stroke-width=\"~f\" fill=~s/>"
+              stroke-width
+              (color nil fill-color))))
 
 (defun star (stream center point-count outter-radius inner-radius
                         &key
@@ -225,10 +232,13 @@
          (format stream "~f ~f "
                  (+ (vx center) (* inner-radius (cos theta-two)))
                  (+ (vy center) (* inner-radius (sin theta-two))))))
-  (format stream "\" stroke=~s stroke-width=\"~f\" fill=~s/>"
-          (color nil stroke-color)
-          stroke-width
-          (color nil fill-color)))
+  (if stroke-color
+      (format stream "\" stroke=~s stroke-width=\"~f\" fill=~s/>"
+              (color nil stroke-color)
+              stroke-width
+              (color nil fill-color))
+      (format stream "\" fill=~s/>"
+              (color nil fill-color))))
 
 (defun view-box (stream view-min view-width)
   "Write an SVG polygon to stream."
