@@ -130,10 +130,17 @@
   "Write an SVG polyline to stream."
   (format stream
           "<polyline points=\"")
-  (loop
-    :for pt :in points :do
-      (format stream "~f ~f "
-              (vx pt) (vy pt)))
+  (etypecase points
+    (list
+     (loop
+       :for pt :in points :do
+         (format stream "~f ~f "
+                 (vx pt) (vy pt))))
+    (vector
+     (loop
+       :for pt :across points :do
+         (format stream "~f ~f "
+                 (vx pt) (vy pt)))))
   (format stream "\" stroke=~s stroke-width=\"~f\"/>"
           (color nil stroke-color)
           stroke-width))
