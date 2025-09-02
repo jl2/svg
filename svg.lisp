@@ -264,10 +264,11 @@
   "Write the beginning of an SVG file to stream."
   (format stream "~
 <?xml version=\"1.0\" standalone=\"no\"?>~%<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">~%
-<svg width=\"~d\" height=\"~d\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" ~a fill=~s >~%"
+<svg width=\"~d\" height=\"~d\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" ~a fill=~s ><circle r=\"1e5\" fill=~s/>~%"
           width
           height
           (view-box nil view-min view-width)
+          (color nil fill)
           (color nil fill))
   (when title
     (format stream "<title>~a</title>~%" title))
@@ -291,6 +292,7 @@
                               (default-stroke-color nil)
                               (default-stroke-width nil)
                               (default-fill-color nil)
+                              (background-fill (vec4 1 1 1 1))
                               (title nil)
                               (flip-y nil))
                     
@@ -313,6 +315,7 @@
                        :view-min ,view-min
                        :view-width ,view-width
                        :title ,title
+                       :fill ,background-fill
                        :flip-y ,flip-y
                        :include-default-text-style t)
             ,@body)
