@@ -142,3 +142,37 @@
                           :fill-color (vec4 (random 1.0) (+ 0.2 (random 0.5)) (random 1.0) 0.125)
                           ))))))
 
+(hunchentoot:define-easy-handler (gensvg :uri "/poly-art") ()
+  (setf (hunchentoot:content-type*) "image/svg+xml")
+  (with-output-to-string (outf)
+    (polygon-art :stream outf)))
+
+(defun polygon-art (&key (stream *standard-output*))
+  (svg:with-svg (stream 1200 1200 :default-stroke-width 0.0015)
+      (let ((count (+ 180 (random 180)))
+            (center (vec2 0 0.0))
+            (sides (+ 3 (random 4)))
+            (spins (1+ (random 2.0)))
+            (offset (random (* pi 7)))
+            (step (1+ (random 5))))
+        (loop
+          :with dt = (/ (* 2 pi) count)
+          :for i :below count :by step
+          :for tval = (* dt i)
+          :do
+             (svg:regular-polygon stream
+                                  (v+ (vec2 (* 0.85 (cos (* 2.0 (+ offset tval))))
+                                            (* 0.85 (sin (* offset (+ offset tval)))))
+                                      center)
+                                  sides
+                                  (* 0.1 (+ 0.1  (* 1.2 (abs (sin (* 9.5 tval))))))
+                                  :angle-offset (+ offset
+                                                   (* i
+                                                      (/ pi
+                                                         (/ count
+                                                            spins))))
+                                  :stroke-color (vec4 0 0.8 0 1)
+                                  :fill-color (vec4 (random 1.0)
+                                                    (+ 0.2 (random 0.5))
+                                                    (random 1.0)
+                                                    0.25))))))
